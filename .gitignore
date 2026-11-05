@@ -1,0 +1,5 @@
+/build/
+/bin/
+/work/
+/CMakeUserPresets.json
+/.vs/

@@ -1,0 +1,24 @@
+{
+  "version": 6,
+  "configurePresets": [{
+    "name": "windows-debug",
+    "generator": "Visual Studio 17 2022",
+    "architecture": "x64",
+    "binaryDir": "${sourceDir}/build",
+    "cacheVariables": {
+      "JUCE_PATH": "D:/JUCE",
+      "FRUSTLANG_ROOT": "D:/FrustLang",
+      "FRUST_VCPKG_INSTALLED_DIR": "D:/000 Creation Suite/apps/CreationEngine/vcpkg_installed/x64-windows",
+      "FLEX_EXECUTABLE": "D:/tools/winflexbison/win_flex.exe",
+      "BISON_EXECUTABLE": "D:/tools/winflexbison/win_bison.exe",
+      "FRUST_WINFLEXBISON_DIR": "D:/tools/winflexbison"
+    }
+  }],
+  "buildPresets": [{
+    "name": "windows-debug",
+    "configurePreset": "windows-debug",
+    "configuration": "Debug",
+    "targets": ["DjehutiResearch"],
+    "jobs": 1
+  }]
+}

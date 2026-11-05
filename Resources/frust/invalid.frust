@@ -1,0 +1,4 @@
+pub fn broken() -> i64 = {
+    let answer = ;
+    answer
+}

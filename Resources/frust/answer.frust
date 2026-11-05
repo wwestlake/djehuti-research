@@ -1,0 +1,2 @@
+manifest "{\"name\":\"research-foundation-proof\",\"version\":\"1.0.0\",\"intendedApplications\":[\"djehuti-research\"],\"entryPoints\":[\"answer\"]}";
+pub fn answer() -> i64 = 42
