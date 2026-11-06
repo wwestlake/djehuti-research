@@ -1,0 +1,144 @@
+name: Windows Release
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*-alpha.*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Select package version and validate release gate
+        id: version
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $version = $env:GITHUB_REF_NAME
+            if ($version -notmatch '^v0\.1\.0-alpha\.[1-9][0-9]*$') { throw 'Only approved 0.1.0 experimental alpha tags are supported' }
+            git merge-base --is-ancestor HEAD origin/master
+            if ($LASTEXITCODE -ne 0) { throw 'Release commit must already be reviewed and merged into master' }
+          } else { $version = "v0.1.0-alpha.1-ci.$env:GITHUB_RUN_NUMBER" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Read pinned source revisions
+        id: pins
+        run: |
+          $lock = Get-Content ci/dependencies.lock.json -Raw | ConvertFrom-Json
+          "frust=$($lock.frust.revision)" >> $env:GITHUB_OUTPUT
+          "juce=$($lock.juce.revision)" >> $env:GITHUB_OUTPUT
+      - name: Check out FRust and CreationDock
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: wwestlake/FrustLang
+          ref: ${{ steps.pins.outputs.frust }}
+          path: work/deps/FrustLang
+          persist-credentials: false
+      - name: Check out JUCE 7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ steps.pins.outputs.juce }}
+          path: work/deps/JUCE
+          persist-credentials: false
+      - name: Restore public dependency cache
+        id: dependencies
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: work/ci-deps
+          key: windows-2022-x64-dependencies-${{ hashFiles('ci/dependencies.lock.json', 'tools/Initialize-CiDependencies.ps1') }}
+      - name: Verify and prepare dependencies
+        run: |
+          New-Item -ItemType Directory -Path work/ci -Force | Out-Null
+          $watch = [Diagnostics.Stopwatch]::StartNew()
+          & ./tools/Initialize-CiDependencies.ps1 *> work/ci/dependencies.log
+          "Dependency preparation seconds: $([Math]::Round($watch.Elapsed.TotalSeconds, 2))" >> $env:GITHUB_STEP_SUMMARY
+      - name: Release build, foundation checks, package and extracted-archive checks
+        run: ./tools/Build-Release.ps1 -Version '${{ steps.version.outputs.version }}'
+      - name: Save verified public dependencies from trusted push only
+        if: success() && github.event_name == 'push' && steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: work/ci-deps
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
+      - name: Upload verified release candidates
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-x64-package
+          path: |
+            work/dist/*.zip
+            work/dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-x64-diagnostics
+          path: |
+            work/ci/
+            work/acceptance/
+            build/frust-provenance.txt
+            build/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 14
+          if-no-files-found: warn
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-x64-package
+          path: package
+      - name: Validate checksums and publish experimental pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+          COMMIT: ${{ github.sha }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        working-directory: package
+        run: |
+          sha256sum --check *.sha256
+          cat > release-notes.md <<EOF
+          Experimental Djehuti Research $VERSION, commit $COMMIT.
+
+          Windows x64 Release build. Intended for Windows 10/11 x64; CI validates
+          Windows Server 2022. Unsigned portable ZIP; no MSI, signing or updater.
+          Extract the complete Windows ZIP and run djehuti_research.exe.
+
+          Early application shell, persistent settings, tabs/dockable Log and trusted
+          built-in FRust proof only. No research database, retrieval, document editing
+          or LLM integration. Automated checks do not establish manual GUI usability.
+
+          Build and extracted-archive verification: $RUN_URL
+          Each executable passed 25 foundation and 6 separate-process restart checks.
+          SHA-256 files accompany both archives. The source ZIP contains matching
+          Research, FRust, JUCE and LLVM source and rebuild instructions. Combined
+          executable: GPLv3; Research-owned source: MIT; separate runtime notices included.
+
+          This is an experimental pre-release, unsuitable for production research work.
+          EOF
+          gh release create "$VERSION" --verify-tag --target "$COMMIT" --prerelease --latest=false --title "Djehuti Research $VERSION (experimental)" --notes-file release-notes.md *.zip *.sha256

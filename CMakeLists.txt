@@ -60,7 +60,8 @@ juce_add_binary_data(ResearchProofSources HEADER_NAME ResearchProofSources.h NAM
 juce_add_gui_app(DjehutiResearch PRODUCT_NAME "Djehuti Research" COMPANY_NAME "LagDaemon Software"
     BUNDLE_ID "com.lagdaemon.djehuti.research" VERSION ${PROJECT_VERSION})
 set_target_properties(DjehutiResearch PROPERTIES OUTPUT_NAME djehuti_research
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/Debug")
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/Debug"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release")
 target_sources(DjehutiResearch PRIVATE Source/Main.cpp Source/Settings.cpp Source/TrustedFrust.cpp
     Source/ResearchWorkspace.cpp Source/FoundationCheck.cpp)
 target_include_directories(DjehutiResearch PRIVATE Source)

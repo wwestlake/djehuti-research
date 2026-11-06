@@ -1,0 +1,16 @@
+Microsoft Visual C++ runtime -- separate, unmodified redistributable files
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+These app-local Release runtime DLLs originate only from the Visual Studio 2022
+VC/Redist/MSVC/<version>/x64/Microsoft.VC143.CRT directory on the build runner.
+No Debug runtime, Windows/DIA SDK library, compiler, or system DLL is bundled.
+The runtime is separately licensed Microsoft Distributable Code, not GPL or MIT.
+
+Visual Studio 2022 Distributable Code list and applicable license terms:
+https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution
+https://visualstudio.microsoft.com/license-terms/vs2022-ga-community/
+https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files
+
+This distribution does not grant rights in Microsoft trademarks or imply
+Microsoft support or endorsement. Microsoft software is subject to its own
+terms; the application and its contributors provide no additional warranty.
