@@ -95,7 +95,10 @@ alone or claim it is wholly MIT. See the upstream license files and
    CI candidate ZIPs and diagnostics as Actions artifacts; they never create a
    Release or notify the website catalog. Only public dependencies are cached;
    no tokens, checkout `.git` metadata, application settings or build objects
-   enter the cache. Cache writes require a successful repository push, not PRs.
+   enter the cache. Cache writes require verified dependency preparation on a
+   repository push, not PRs. The small `windows-x64-package` artifact holds the
+   Windows ZIP/checksum; `corresponding-source-package` holds the matching source
+   ZIP/checksum. Both are downloaded together for tagged publication.
 2. The owner reviews and merges the PR. Do not self-merge or push to `master`
    to bypass review. Read the successful workflow and inspect candidate contents.
 3. After the version is approved, tag that reviewed commit, e.g.

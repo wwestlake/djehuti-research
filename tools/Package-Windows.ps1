@@ -73,10 +73,12 @@ $provenance = [ordered]@{
 }
 $provenance | ConvertTo-Json -Depth 12 | Set-Content "$stage/build-provenance.json"
 $sourceName = "DjehutiResearch-$Version-source.zip"
+$sourceLocation = "https://github.com/wwestlake/djehuti-research/releases/tag/$Version"
+if ($Version -match '-ci\.' -and $env:GITHUB_RUN_ID) { $sourceLocation = "https://github.com/wwestlake/djehuti-research/actions/runs/$env:GITHUB_RUN_ID" }
 @"
 Corresponding Source for $Version, Research commit $commit
 Download $sourceName from this same release:
-https://github.com/wwestlake/djehuti-research/releases/tag/$Version
+$sourceLocation
 It contains Research, JUCE, FRust source snapshots and the LLVM 18.1.6 source
 archive, license notices, and build instructions/scripts. No source access fee.
 Research-owned files retain MIT terms; the linked executable uses GPL version 3.

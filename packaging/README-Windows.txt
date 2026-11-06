@@ -18,5 +18,6 @@ only if you also want to discard preferences.
 
 The combined executable is distributed under GNU GPL version 3, without warranty.
 Research-owned source remains MIT. Read licenses and THIRD_PARTY_NOTICES.md.
-Matching Research, JUCE, FRust and LLVM source archives accompany this ZIP on
-the same GitHub release, at no charge. See SOURCE.txt and build-provenance.json.
+Matching Research, JUCE, FRust and LLVM source archives accompany the binary
+release or CI candidate, at no charge. See SOURCE.txt for their actual location
+and build-provenance.json for the dependency identity.
