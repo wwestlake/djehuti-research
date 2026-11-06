@@ -23,6 +23,10 @@ Copy-Item packaging/licenses/* "$stage/licenses/"
 Copy-Item "$env:JUCE_PATH/LICENSE.md" "$stage/licenses/JUCE.txt"
 Copy-Item "$env:FRUSTLANG_ROOT/LICENSE" "$stage/licenses/FRust-MIT.txt"
 Copy-Item "$env:FRUST_VCPKG_INSTALLED_DIR/share/llvm/copyright" "$stage/licenses/LLVM-vcpkg.txt"
+Copy-Item "$env:FRUST_WINFLEXBISON_DIR/FlexLexer.h" "$stage/licenses/FlexLexer-header.txt"
+# Retain the generated parser's copyright and skeleton exception without its
+# machine-specific #line directives or the parser implementation.
+Get-Content build/deps/frust/generated/parser.cpp -TotalCount 32 | Set-Content "$stage/licenses/Bison-parser-notice.txt"
 # Preserve the notices embedded in the actual bundled JUCE dependencies.
 $notices = @{
     'juce_core/juce_core.h'='JUCE-core-header.txt'; 'juce_events/juce_events.h'='JUCE-events-header.txt'

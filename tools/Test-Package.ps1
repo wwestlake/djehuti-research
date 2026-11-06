@@ -13,6 +13,9 @@ Expand-Archive -LiteralPath $zip -DestinationPath $extract
 $root = Join-Path $extract $name
 $manifest = Get-Content "$root/build-provenance.json" -Raw | ConvertFrom-Json
 if ($manifest.version -ne $Version -or $manifest.configuration -ne 'Release') { throw 'Wrong packaged version/configuration' }
+foreach ($notice in @('GPL-3.0.txt','FlexLexer-header.txt','Bison-parser-notice.txt','LLVM-vcpkg.txt','Microsoft-Runtime.txt','JUCE.txt','FRust-MIT.txt','Research-MIT.txt')) {
+    if (!(Test-Path -LiteralPath "$root/licenses/$notice")) { throw "Required component notice missing: $notice" }
+}
 foreach ($file in $manifest.files) {
     if ((Get-FileHash -LiteralPath (Join-Path $root $file.path) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) { throw "Content checksum mismatch: $($file.path)" }
 }
