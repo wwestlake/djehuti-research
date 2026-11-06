@@ -1,41 +1,62 @@
 # Djehuti Research
 
-Work Order 1: an independent native Windows JUCE/C++ application foundation.
+An early native Windows JUCE/C++ research application foundation. It currently provides an inactive Agent placeholder, a tabbed Document area, a dockable Log, persistent window/layout settings, a validated default project-directory preference, and a bundled trusted FRust compiler/runtime proof.
 
-The workspace has an explicitly inactive Agent panel, a multi-tab Document area and a dockable/floating Log. File > New empty document tab demonstrates the document container without creating files. View restores hidden panels or the default layout. The Log button and Help menu run the bundled trusted FRust proof.
+Research functionality is under development. There is no research database, ingestion, semantic retrieval/ISD, document editing, LLM integration or website connector. The application is independent of the Djehuti Suite VFS and does not require its runtime, Services or AssetSystem targets.
 
-Choose an existing writable local default project directory, then Apply. Invalid, inaccessible and network locations are rejected visibly; the last saved selection is retained. The check creates only a unique temporary write probe, automatically removed when its handle closes. No project or directory is created by choosing a location.
+## Build prerequisites
 
-Window geometry, panel layout and the project-directory preference are saved to `%APPDATA%/DjehutiResearch/settings.json` using temporary-file replacement. A malformed or unsupported settings file is reported and preserved, rather than silently overwritten. `--settings-dir <absolute-directory>` isolates settings for testing.
+The foundation was built and functionally checked on Windows 10 x64, build 19045, using Visual Studio 2022 (MSVC 19.36), CMake 4.0.1 and PowerShell 7. Other operating systems have not been tested. The project requires Windows/MSVC; the supplied schema-6 presets require CMake 3.25 or later.
 
-## Build
+Install or provide these external dependencies separately; none is vendored here:
 
-Use Visual Studio 2022 x64, CMake, existing JUCE, standalone FrustLang, WinFlexBison and the existing LLVM 18.1.6 installation. `CMakePresets.json` records this machine's dependency locations; override these cache paths in `CMakeUserPresets.json` on another machine. Runtime code contains no developer-machine source paths.
+| Dependency | Verified version / source |
+|---|---|
+| JUCE | [7.0.9](https://github.com/juce-framework/JUCE/tree/7.0.9) source checkout |
+| FRust, CreationDock and Frate | [FrustLang](https://github.com/wwestlake/FrustLang), exact commit `008afac7e5bea9569e0631795871334b2336a022` |
+| LLVM | Existing LLVM 18.1.6 installation, built with the native x64 libraries consumed by FRust; includes `share/llvm/LLVMConfig.cmake` |
+| WinFlexBison | Verified Flex 2.6.4 and Bison 3.8.2 executables, with `FlexLexer.h` |
+| Windows development tools | Visual Studio C++ workload, Windows SDK and DIA SDK |
+
+FRust's referenced source directories must have no tracked edits. Configuration verifies the exact FRust revision. It compiles matching headers/libraries into this project's build tree. It does not use old FRust archives, install dependencies, invoke vcpkg or rebuild LLVM. Reuse the existing verified LLVM installation rather than reconciling it through a package manager.
+
+## Local configuration and reproduction
+
+Set these environment variables to your existing dependency locations before configuring, or override the equivalent cache variables in an ignored `CMakeUserPresets.json`:
+
+| Variable | Local value required |
+|---|---|
+| `JUCE_PATH` | JUCE source root containing `CMakeLists.txt` |
+| `FRUSTLANG_ROOT` | Exact FrustLang checkout listed above |
+| `FRUST_VCPKG_INSTALLED_DIR` | Existing LLVM installation root containing `share/llvm/LLVMConfig.cmake`; its name does not authorize running vcpkg |
+| `FLEX_EXECUTABLE` | Full path to `win_flex.exe` |
+| `BISON_EXECUTABLE` | Full path to `win_bison.exe` |
+| `FRUST_WINFLEXBISON_DIR` | Directory containing `FlexLexer.h` |
+
+From the repository root:
 
 ```powershell
 New-Item -ItemType Directory -Path work -Force | Out-Null
 cmake --preset windows-debug --graphviz=work/dependencies.dot *> work/configure.log
+if ($LASTEXITCODE -ne 0) { throw 'Configuration failed; inspect work/configure.log' }
 cmake --build --preset windows-debug *> work/build-debug.log
+if ($LASTEXITCODE -ne 0) { throw 'Build failed; inspect work/build-debug.log' }
+pwsh -NoProfile -File tools/Test-Foundation.ps1 *> work/test-foundation.log
+if ($LASTEXITCODE -ne 0) { throw 'Focused checks failed; inspect work/test-foundation.log' }
 ```
 
-Executable: `bin/Debug/djehuti_research.exe`. One target, Debug, one build core. Do not run vcpkg or rebuild LLVM. Configuration rejects a FRust revision mismatch or tracked edits in the referenced compiler/dock/host directories. FRust headers and libraries are compiled together from revision `008afac7e5bea9569e0631795871334b2336a022`; generated files, libraries and PDBs are redirected into Research's own `build/` tree. No prebuilt FRust archive of unknown provenance is consumed. The LLVM package is imported read-only.
+The Debug executable is `bin/Debug/djehuti_research.exe`. Use one build core and the existing `build/` directory. The supplied build preset selects only the application target. A local preset may inherit `windows-debug` and supply machine-specific cache values; keep it out of Git.
 
-## Focused verification
+The Work Order 1 baseline passed 25 native foundation checks and 6 separate-process restoration checks. These cover tabs, docking, valid/invalid/unwritable directories, settings preservation, a real FRust `42` result, readable malformed-input diagnostics, handle unloading and normal process exit. Test reports and native workspace renderings are written beneath `work/acceptance/`. Network endpoint sampling supplements source review but cannot exclude a connection shorter than the sampling interval. Manual desktop input was not verified because the UI helper could not capture/input reliably; native component rendering and behavior were checked independently.
 
-```powershell
-pwsh -NoProfile -File tools/Test-Foundation.ps1
-```
+## Application settings
 
-The executable's `--foundation-check <absolute-fixture-directory>` mode exercises the same window, settings, tab/docking and FRust functions as the UI. The wrapper creates an isolated directory with a denied-write ACL for the negative test, restores its original ACL in `finally`, records process exit and samples only that process's TCP/UDP endpoints. A second process uses `--verify-restored` to reload those exact settings, show the real window, run the asynchronous workspace self-test, verify its Log result and exit normally. Native JUCE component snapshots record the actual rendered workspace; they do not capture the OS window frame. Reports and logs are under `work/acceptance/`. No elevation, firewall change or packet capture is used. Endpoint sampling is observational: it is supplemented by source/dependency review, and cannot establish the absence of a very short-lived connection between samples.
+Choose an existing writable local default project directory and Apply. Invalid choices leave the saved preference intact. Validation creates a unique temporary write probe and removes it when its handle closes; it does not create a research project. Keep personal research files outside the source checkout.
 
-Also perform a real GUI check: choose a directory, create/switch tabs, float/redock the Log, run the self-test, resize/reposition, exit and relaunch with the same settings directory. Close all test windows/processes explicitly afterward. Compile success alone does not satisfy GUI acceptance.
+Window geometry, panel layout and the preference are stored in the current user's application-data directory under `DjehutiResearch/settings.json`. Malformed settings are reported and preserved. `--settings-dir <absolute-directory>` isolates state for testing.
 
-## Scope and dependencies
+## Licensing and contributions
 
-Adapted the JUCE lifecycle, CreationDock workspace and settings patterns from DjehutiMath foundation `ff2ee952abe2e697db71d9342618fb6cc359f870`. Reuses CreationDock and the actual FRust compiler/plugin-host implementation. Research's settings, directory validation, empty tab views, bundled proof and focused checks are new application code.
+Project-owned material is licensed under [MIT](LICENSE). Preserve the inherited attribution and permissions in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This does not relicense JUCE, LLVM or other external components. In particular, the JUCE GUI modules have GPLv3/commercial terms; a combined application is not automatically an MIT-only binary.
 
-Direct application libraries: ResearchProofSources, CreationDock, frust_plugin_host, frust_runtime and JUCE GUI. FRust adds frust_lang, frate_lib and imported LLVM component libraries. No Suite VFS, SuiteFrust, Services, AssetSystem, AI provider or website target is linked. The generated dependency graph and `build/frust-provenance.txt` record the configured build.
-
-The proof compiles a bundled `answer() -> i64`, loads its in-memory x64 object with the existing `frust_plugin_load_object` C ABI, calls it and destroys the host handle before the pointer leaves its scope. It repeats three times, then compiles malformed bundled input and reports the real diagnostic. No user code, imports, provider calls or registry resolution are offered.
-
-Database, semantic retrieval/ISD, document editing, untrusted plugin permissions, credentials and website/LLM integration await separate orders. The Orders folder on Drive is authoritative; no later order is started automatically.
+Use focused branches and PRs to `master` after the initial repository publication; see [CONTRIBUTING.md](CONTRIBUTING.md). Release automation and website downloads are outside this foundation's current scope.

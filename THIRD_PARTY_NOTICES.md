@@ -1,5 +1,7 @@
 # Reuse record
 
+The root MIT `LICENSE` covers Djehuti Research-owned material. It does not replace any external license. Upstream component implementations remain external; no JUCE, LLVM, CreationDock or FRust source tree is vendored in this repository.
+
 Application lifecycle/settings/docking patterns adapted from DjehutiMath foundation `ff2ee952abe2e697db71d9342618fb6cc359f870` (MIT, copyright 2026 WWestlake).
 
 CreationDock and FRust compiler/plugin host are consumed from the external FrustLang checkout at `008afac7e5bea9569e0631795871334b2336a022` (MIT, copyright 2026 William Westlake). They remain separate read-only sources; none is vendored or modified here.
@@ -12,4 +14,15 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-JUCE and LLVM retain their upstream licenses in the configured external source/install trees. This order produces a development build, not a distribution package.
+## External dependencies and redistribution boundaries
+
+| Component actually used | Terms verified | Publication/distribution boundary |
+|---|---|---|
+| DjehutiMath foundation patterns, `ff2ee952abe2e697db71d9342618fb6cc359f870` | [MIT](https://github.com/wwestlake/DjehutiMath/blob/ff2ee952abe2e697db71d9342618fb6cc359f870/LICENSE), attribution above | Retain the copyright and permission notice with copied/adapted material. |
+| FrustLang compiler/runtime, plugin-host interfaces, CreationDock and Frate, `008afac7e5bea9569e0631795871334b2336a022` | [Root MIT license](https://github.com/wwestlake/FrustLang/blob/008afac7e5bea9569e0631795871334b2336a022/LICENSE); no separate override license found in the referenced components | External sources compiled locally; preserve their notices if subsequently redistributed. |
+| JUCE 7.0.9 `juce_gui_basics`, `juce_gui_extra`, `juce_graphics`, `juce_data_structures` | [GPLv3/commercial](https://github.com/juce-framework/JUCE/blob/7.0.9/modules/juce_gui_basics/juce_gui_basics.h), [JUCE 7 license file](https://github.com/juce-framework/JUCE/blob/7.0.9/LICENSE.md) | Not MIT. Combined-application distribution must follow the applicable JUCE commercial terms or GPLv3 route. No commercial entitlement is asserted by this repository. |
+| JUCE 7.0.9 `juce_core` and `juce_events` | ISC, as stated in their module headers | Retain their module copyright and permission notices when redistributed. Bundled JUCE codecs/other third-party portions retain the notices in their upstream files. |
+| LLVM 18.1.6 component libraries | [Apache-2.0 with LLVM exceptions and the component notices in that file](https://github.com/llvm/llvm-project/blob/llvmorg-18.1.6/llvm/LICENSE.TXT) | Existing installation is consumed read-only. Any later redistribution must preserve the applicable upstream license/attribution and account for its exceptions. |
+| WinFlexBison, CMake, Git, Visual Studio, Windows/DIA SDK and PowerShell | External build/test prerequisites, governed by their own distributions | Their tool binaries, SDKs and runtime files are not included in the source publication. |
+
+No binary or third-party source bundle is published by repository-readiness work. An MIT license for project-owned sources is not a finding that an arbitrary combined binary can be distributed under MIT alone. The licensing route and exact notices for any later binary package must be addressed before that package is published; no release workflow is implemented here.

@@ -6,12 +6,12 @@
     "architecture": "x64",
     "binaryDir": "${sourceDir}/build",
     "cacheVariables": {
-      "JUCE_PATH": "D:/JUCE",
-      "FRUSTLANG_ROOT": "D:/FrustLang",
-      "FRUST_VCPKG_INSTALLED_DIR": "D:/000 Creation Suite/apps/CreationEngine/vcpkg_installed/x64-windows",
-      "FLEX_EXECUTABLE": "D:/tools/winflexbison/win_flex.exe",
-      "BISON_EXECUTABLE": "D:/tools/winflexbison/win_bison.exe",
-      "FRUST_WINFLEXBISON_DIR": "D:/tools/winflexbison"
+      "JUCE_PATH": "$env{JUCE_PATH}",
+      "FRUSTLANG_ROOT": "$env{FRUSTLANG_ROOT}",
+      "FRUST_VCPKG_INSTALLED_DIR": "$env{FRUST_VCPKG_INSTALLED_DIR}",
+      "FLEX_EXECUTABLE": "$env{FLEX_EXECUTABLE}",
+      "BISON_EXECUTABLE": "$env{BISON_EXECUTABLE}",
+      "FRUST_WINFLEXBISON_DIR": "$env{FRUST_WINFLEXBISON_DIR}"
     }
   }],
   "buildPresets": [{
