@@ -13,11 +13,24 @@
       "BISON_EXECUTABLE": "$env{BISON_EXECUTABLE}",
       "FRUST_WINFLEXBISON_DIR": "$env{FRUST_WINFLEXBISON_DIR}"
     }
+  }, {
+    "name": "windows-release",
+    "inherits": "windows-debug",
+    "cacheVariables": {
+      "LLVM_DIR": "$env{LLVM_DIR}",
+      "RESEARCH_DIA_GUIDS_LIBRARY": "$env{RESEARCH_DIA_GUIDS_LIBRARY}"
+    }
   }],
   "buildPresets": [{
     "name": "windows-debug",
     "configurePreset": "windows-debug",
     "configuration": "Debug",
+    "targets": ["DjehutiResearch"],
+    "jobs": 1
+  }, {
+    "name": "windows-release",
+    "configurePreset": "windows-release",
+    "configuration": "Release",
     "targets": ["DjehutiResearch"],
     "jobs": 1
   }]

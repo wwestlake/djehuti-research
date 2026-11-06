@@ -27,6 +27,27 @@ add_compile_definitions(JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 NOMINMAX WIN32_LEAN_A
 add_compile_options(/FS /MP1 /utf-8)
 add_subdirectory("${JUCE_PATH}" "${CMAKE_BINARY_DIR}/deps/juce" EXCLUDE_FROM_ALL)
 
+# The prebuilt LLVM exports remember the SDK path on their original build
+# machine. Import once in this scope and rebind only that target property to
+# the runner's existing SDK; never alter an installed LLVM or upstream source.
+set(RESEARCH_DIA_GUIDS_LIBRARY "" CACHE FILEPATH "Existing x64 DIA SDK diaguids.lib for this build")
+if(RESEARCH_DIA_GUIDS_LIBRARY)
+    if(NOT EXISTS "${RESEARCH_DIA_GUIDS_LIBRARY}")
+        message(FATAL_ERROR "RESEARCH_DIA_GUIDS_LIBRARY does not exist.")
+    endif()
+    find_package(LLVM 18.1.6 EXACT CONFIG REQUIRED)
+    get_target_property(pdb_links LLVMDebugInfoPDB INTERFACE_LINK_LIBRARIES)
+    set(local_pdb_links "")
+    foreach(link IN LISTS pdb_links)
+        if(link MATCHES "[/\\\\]diaguids[.]lib$")
+            list(APPEND local_pdb_links "${RESEARCH_DIA_GUIDS_LIBRARY}")
+        else()
+            list(APPEND local_pdb_links "${link}")
+        endif()
+    endforeach()
+    set_property(TARGET LLVMDebugInfoPDB PROPERTY INTERFACE_LINK_LIBRARIES "${local_pdb_links}")
+endif()
+
 # Compile the actual pinned sources into Research's build tree, never into the
 # reference repositories' shared bin/lib directories. LLVM remains imported.
 function(research_local_outputs directory)
@@ -60,7 +81,8 @@ juce_add_binary_data(ResearchProofSources HEADER_NAME ResearchProofSources.h NAM
 juce_add_gui_app(DjehutiResearch PRODUCT_NAME "Djehuti Research" COMPANY_NAME "LagDaemon Software"
     BUNDLE_ID "com.lagdaemon.djehuti.research" VERSION ${PROJECT_VERSION})
 set_target_properties(DjehutiResearch PROPERTIES OUTPUT_NAME djehuti_research
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/Debug")
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/Debug"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/Release")
 target_sources(DjehutiResearch PRIVATE Source/Main.cpp Source/Settings.cpp Source/TrustedFrust.cpp
     Source/ResearchWorkspace.cpp Source/FoundationCheck.cpp)
 target_include_directories(DjehutiResearch PRIVATE Source)

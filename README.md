@@ -59,4 +59,4 @@ Window geometry, panel layout and the preference are stored in the current user'
 
 Project-owned material is licensed under [MIT](LICENSE). Preserve the inherited attribution and permissions in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This does not relicense JUCE, LLVM or other external components. In particular, the JUCE GUI modules have GPLv3/commercial terms; a combined application is not automatically an MIT-only binary.
 
-Use focused branches and PRs to `master` after the initial repository publication; see [CONTRIBUTING.md](CONTRIBUTING.md). Release automation and website downloads are outside this foundation's current scope.
+Use focused branches and PRs to `master`; see [CONTRIBUTING.md](CONTRIBUTING.md). The [Windows release procedure](docs/RELEASING.md) describes pinned CI dependencies, Release builds, verification, experimental packages, gated publication and the existing website catalog integration.
