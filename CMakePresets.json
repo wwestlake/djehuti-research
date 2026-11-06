@@ -15,7 +15,11 @@
     }
   }, {
     "name": "windows-release",
-    "inherits": "windows-debug"
+    "inherits": "windows-debug",
+    "cacheVariables": {
+      "LLVM_DIR": "$env{LLVM_DIR}",
+      "RESEARCH_DIA_GUIDS_LIBRARY": "$env{RESEARCH_DIA_GUIDS_LIBRARY}"
+    }
   }],
   "buildPresets": [{
     "name": "windows-debug",

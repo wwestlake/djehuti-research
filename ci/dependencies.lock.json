@@ -3,12 +3,21 @@
   "juce": { "repository": "juce-framework/JUCE", "version": "7.0.9", "revision": "d054f0d14dcac387aebda44ce5d792b5e7a625b3" },
   "llvm": {
     "version": "18.1.6",
-    "file": "clang+llvm-18.1.6-x86_64-pc-windows-msvc.tar.xz",
-    "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.6/clang%2Bllvm-18.1.6-x86_64-pc-windows-msvc.tar.xz",
-    "sha256": "479e9e77b9d114721a7168718c894343ac01c397db3499e8a3002ee7a3903d54",
+    "provider": "existing-s3-build-cache",
+    "s3Uri": "s3://creation-suite-build-cache/vcpkg-cache/llvm-vcpkg-x64-windows.tar",
+    "region": "us-east-2",
+    "bytes": 11746078720,
+    "sha256": "1a625f8a22784b9d2940033ec80920319bcd7eb75b5206cc8f3d39c81772b6e0",
     "sourceFile": "llvm-project-18.1.6.src.tar.xz",
     "sourceUrl": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.6/llvm-project-18.1.6.src.tar.xz",
     "sourceSha256": "bd4b4cb6374bcd5fc5a3ba60cb80425d29da34f316b8821abc12c0db225cf6b4"
+  },
+  "vcpkg": {
+    "repository": "microsoft/vcpkg",
+    "revision": "40f3c709db80acf154ac4b17a1f83c564ebd022e",
+    "sourceFile": "vcpkg-40f3c709-source.tar.gz",
+    "sourceUrl": "https://github.com/microsoft/vcpkg/archive/40f3c709db80acf154ac4b17a1f83c564ebd022e.tar.gz",
+    "sourceSha256": "1bdeeaae367e3a3002eb730520c897f47cb9bf8771bf48f5743a7bf3c38efb37"
   },
   "winflexbison": {
     "version": "2.5.25",

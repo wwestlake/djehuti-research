@@ -63,21 +63,25 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: work/ci-deps
-          key: windows-2022-x64-dependencies-${{ hashFiles('ci/dependencies.lock.json', 'tools/Initialize-CiDependencies.ps1') }}
+          key: windows-2022-x64-dependencies-${{ hashFiles('ci/dependencies.lock.json', 'ci/extract-llvm.py', 'tools/Initialize-CiDependencies.ps1') }}
       - name: Verify and prepare dependencies
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-2
         run: |
           New-Item -ItemType Directory -Path work/ci -Force | Out-Null
           $watch = [Diagnostics.Stopwatch]::StartNew()
           & ./tools/Initialize-CiDependencies.ps1 *> work/ci/dependencies.log
           "Dependency preparation seconds: $([Math]::Round($watch.Elapsed.TotalSeconds, 2))" >> $env:GITHUB_STEP_SUMMARY
-      - name: Release build, foundation checks, package and extracted-archive checks
-        run: ./tools/Build-Release.ps1 -Version '${{ steps.version.outputs.version }}'
       - name: Save verified public dependencies from trusted push only
         if: success() && github.event_name == 'push' && steps.dependencies.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: work/ci-deps
           key: ${{ steps.dependencies.outputs.cache-primary-key }}
+      - name: Release build, foundation checks, package and extracted-archive checks
+        run: ./tools/Build-Release.ps1 -Version '${{ steps.version.outputs.version }}'
       - name: Upload verified release candidates
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

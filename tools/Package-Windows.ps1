@@ -22,6 +22,7 @@ Copy-Item packaging/README-Windows.txt "$stage/README.txt"
 Copy-Item packaging/licenses/* "$stage/licenses/"
 Copy-Item "$env:JUCE_PATH/LICENSE.md" "$stage/licenses/JUCE.txt"
 Copy-Item "$env:FRUSTLANG_ROOT/LICENSE" "$stage/licenses/FRust-MIT.txt"
+Copy-Item "$env:FRUST_VCPKG_INSTALLED_DIR/share/llvm/copyright" "$stage/licenses/LLVM-vcpkg.txt"
 # Preserve the notices embedded in the actual bundled JUCE dependencies.
 $notices = @{
     'juce_core/juce_core.h'='JUCE-core-header.txt'; 'juce_events/juce_events.h'='JUCE-events-header.txt'
@@ -38,12 +39,32 @@ $crt = Join-Path $redist.FullName 'x64/Microsoft.VC143.CRT'
 # Use only Release CRT files listed as Visual Studio distributable code.
 $crtNames = @('msvcp140.dll','msvcp140_1.dll','msvcp140_2.dll','msvcp140_atomic_wait.dll','msvcp140_codecvt_ids.dll','vcruntime140.dll','vcruntime140_1.dll','concrt140.dll')
 foreach ($dll in $crtNames) { Copy-Item -LiteralPath (Join-Path $crt $dll) -Destination $stage }
+$threads = Join-Path $crt 'vcruntime140_threads.dll'
+if (Test-Path -LiteralPath $threads) { Copy-Item -LiteralPath $threads -Destination $stage }
+$tools = Get-ChildItem "$vs/VC/Tools/MSVC" -Directory | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+$dumpbin = Join-Path $tools.FullName 'bin/Hostx64/x64/dumpbin.exe'
+$imports = [ordered]@{}
+foreach ($binary in Get-ChildItem $stage -File | Where-Object Extension -In @('.exe','.dll')) {
+    $lines = & $dumpbin /nologo /dependents $binary.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Import inspection failed: $($binary.Name)" }
+    $dlls = @($lines | Where-Object { $_ -match '^\s+[A-Za-z0-9_.-]+\.dll\s*$' } | ForEach-Object { $_.Trim() } | Select-Object -Unique)
+    $imports[$binary.Name] = $dlls
+    foreach ($dll in $dlls) {
+        if (Test-Path -LiteralPath (Join-Path $stage $dll)) { continue }
+        if ($dll -like 'api-ms-win-*' -or $dll -like 'ext-ms-win-*') { continue }
+        $systemFile = Join-Path "$env:WINDIR/System32" $dll
+        if (!(Test-Path -LiteralPath $systemFile) -or (Get-Item -LiteralPath $systemFile).VersionInfo.CompanyName -notlike '*Microsoft*') {
+            throw "Unpackaged non-system startup dependency: $($binary.Name) -> $dll"
+        }
+    }
+}
+$imports | ConvertTo-Json -Depth 5 | Set-Content work/ci/startup-imports.json
 $commit = (& git rev-parse HEAD)
 $provenance = [ordered]@{
     version=$Version; commit=$commit; configuration='Release'; architecture='x64'; dependencies=$lock
     runnerImage=$env:ImageOS; runnerVersion=$env:ImageVersion
     cmake=(& cmake --version | Select-Object -First 1)
-    msvcRedistVersion=$redist.Name; license='GPL-3.0-only combined executable; MIT project sources'
+    msvcRedistVersion=$redist.Name; startupImports=$imports; license='GPL-3.0-only combined executable; MIT project sources'
     files=@(Get-ChildItem $stage -File -Recurse | ForEach-Object { @{path=[IO.Path]::GetRelativePath($stage,$_.FullName); sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(); bytes=$_.Length} })
 }
 $provenance | ConvertTo-Json -Depth 12 | Set-Content "$stage/build-provenance.json"
@@ -64,6 +85,9 @@ foreach ($item in @(@($repo,'Research'), @($env:JUCE_PATH,'JUCE'), @($env:FRUSTL
 }
 if ((Get-FileHash -LiteralPath $env:RESEARCH_LLVM_SOURCE -Algorithm SHA256).Hash.ToLowerInvariant() -ne $lock.llvm.sourceSha256) { throw 'LLVM corresponding source hash mismatch' }
 Copy-Item -LiteralPath $env:RESEARCH_LLVM_SOURCE -Destination $sourceStage
+if ((Get-FileHash -LiteralPath $env:RESEARCH_VCPKG_SOURCE -Algorithm SHA256).Hash.ToLowerInvariant() -ne $lock.vcpkg.sourceSha256) { throw 'vcpkg source/patch archive hash mismatch' }
+Copy-Item -LiteralPath $env:RESEARCH_VCPKG_SOURCE -Destination $sourceStage
+Copy-Item "$env:FRUST_VCPKG_INSTALLED_DIR/share/llvm/vcpkg_abi_info.txt" "$sourceStage/LLVM-vcpkg-build-inputs.txt"
 Copy-Item docs/RELEASING.md "$sourceStage/BUILD.md"
 Copy-Item packaging/licenses/GPL-3.0.txt $sourceStage
 Compress-Archive -Path "$sourceStage/*" -DestinationPath "$out/$sourceName" -CompressionLevel Optimal

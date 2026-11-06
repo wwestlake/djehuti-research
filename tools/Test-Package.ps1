@@ -17,7 +17,7 @@ foreach ($file in $manifest.files) {
     if ((Get-FileHash -LiteralPath (Join-Path $root $file.path) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) { throw "Content checksum mismatch: $($file.path)" }
 }
 $allowed = @('djehuti_research.exe','README.txt','THIRD_PARTY_NOTICES.md','SOURCE.txt','build-provenance.json',
-    'msvcp140.dll','msvcp140_1.dll','msvcp140_2.dll','msvcp140_atomic_wait.dll','msvcp140_codecvt_ids.dll','vcruntime140.dll','vcruntime140_1.dll','concrt140.dll')
+    'msvcp140.dll','msvcp140_1.dll','msvcp140_2.dll','msvcp140_atomic_wait.dll','msvcp140_codecvt_ids.dll','vcruntime140.dll','vcruntime140_1.dll','vcruntime140_threads.dll','concrt140.dll')
 foreach ($file in Get-ChildItem -LiteralPath $root -File -Recurse) {
     $relative=[IO.Path]::GetRelativePath($root,$file.FullName)
     if ($relative -notlike 'licenses\*' -and $relative -notin $allowed) { throw "Unexpected package file: $relative" }
